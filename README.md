@@ -1,4 +1,9 @@
 
+🇫🇷 [Version française](#version-française)  
+🇬🇧 [English version](#english-version)
+
+## Version française
+
 Le script lit un arbre de décision décrit dans un fichier texte et l'aplatit en une liste de stratégies conjonctives menant à chaque feuille.  
 Chaque ligne de sortie représente une combinaison de contraintes aboutissant à une feuille, au format :  `feature1=val & feature2!=val2 : leaf_value`.
 
@@ -78,5 +83,98 @@ python script.py tree_to_convert.txt strategies.txt
 
 - **Only OR** : le format supporte uniquement des nœuds avec des disjonctions.
 - **Opérateurs** limités à `=` et `!=`.
+
+Voici la **traduction anglaise fidèle et naturelle** de ton texte, à ajouter sous la version française dans ton README :
+
+
+## English version
+
+The script reads a decision tree described in a text file and flattens it into a list of conjunctive strategies leading to each leaf.
+Each output line represents a combination of constraints leading to a leaf, in the format:
+`feature1=val & feature2!=val2 : leaf_value`.
+
+## Key Points
+
+- **Parsing**
+  Handles:
+
+  - Conditional nodes in the format: `id:[cond1 ||or|| cond2 ||or|| ...] yes=X,no=Y`
+  - Leaf nodes: `id:leaf=0.12345`
+  - Operators `=` and `!=`
+  - OR separator: `||or||`
+
+- **DFS traversal with correct OR semantics**
+
+  - **YES branch:** creates one branch per disjunctive condition (`A ∨ B ⇒ separate branches with A, with B`).
+  - **NO branch:** adds the conjunction of all negated conditions (`A ∧ B`) following De Morgan’s law.
+
+- **Automatic pruning & simplification**
+
+  - Removes contradictions such as `x=4` with `x!=4`, or `x=4` with `x=5`.
+  - Simplifies constraints: if `x=4` is set, all accumulated `x!=` conditions for `x` are removed.
+
+- **Low memory footprint**
+
+  - The `LazyTreeFileScanner` does not load the full tree into memory.
+  - Each node lookup is done on the fly by scanning the file: O(1) memory, O(N) time per lookup.
+  - Optional optimization: an index mapping `id → position` can be built to speed up lookups.
+
+## Output Format
+
+Each line is a complete strategy, with conditions joined by `&`.
+
+```
+<feature_conds_joined_with_&> : <leaf_value>
+```
+
+## Algorithm Overview
+
+1. **Parsing**
+
+   - Regular expressions detect nodes and leaves.
+   - Node conditions are split on `||or||`.
+   - Features and values are cleaned and normalized.
+
+2. **Representation of the current constraint state**
+
+   - By **feature**:
+
+     - `eq`: equality value if known (otherwise `None`),
+     - `neq`: set of forbidden values.
+   - **Simplification:** setting `eq` clears all `neq` for that feature.
+   - **Immediate pruning** on contradiction.
+
+3. **Iterative DFS**
+
+   - Stack of `(node_id, state)` starting at ID 0.
+   - **YES:** for each disjunctive condition, clone the state and add that condition.
+   - **NO:** clone the state and add all negations (conjunction).
+   - At a leaf, format the state into a strategy and write the line.
+
+4. **Strategy formatting**
+
+   - Join with `&`, then append `: leaf_value`.
+
+## Complexity & Performance
+
+- **Memory:** O(1) for reading + O(depth) for the DFS state, well below input file size.
+- **Time:** With `LazyTreeFileScanner`, each `get_node_by_id` is linear in file size → total O(M·N) with M visited nodes and N lines in the file.
+
+## Usage
+
+### Requirements
+
+- Python **3.8+**
+
+### Execution
+
+```bash
+python script.py tree_to_convert.txt strategies.txt
+```
+
+## Current Limitations
+
+- **Only OR:** the format currently supports only disjunctive nodes.
+- **Operators:** limited to `=` and `!=`.
 
 
