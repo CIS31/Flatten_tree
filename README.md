@@ -12,7 +12,7 @@ Chaque ligne de sortie représente une combinaison de contraintes aboutissant à
   - le séparateur d’OR : `||or||`.
 
 - **Parcours DFS avec sémantique correcte des OR**  
-  - **Branche YES** : crée une branche par condition disjonctif (`A ∨ B ⇒ branches séparées avec `A`, avec `B`).  
+  - **Branche YES** : crée une branche par condition disjonctif (`A ∨ B ⇒ branches séparées avec A, avec B).  
   - **Branche NO** : ajoute la conjonction des négations de toutes les contions (`A ∧ B`) via la loi de De Morgan.
 
 - **Pruning & simplification automatiques**  
